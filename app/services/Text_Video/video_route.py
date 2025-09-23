@@ -11,11 +11,13 @@ async def generate_video_endpoint(request: VideoRequest, video_service: VideoSer
     """Generates a video from a text prompt."""
     try:
         logger.info(f"Received video generation request: {request.prompt[:50]}...")
+        logger.info(f"Video model: {request.video_model}")
         
         video_url = video_service.generate_video(
             request.prompt, 
             request.video_ratio, 
-            request.video_quality
+            request.video_quality,
+            request.video_model
         )
 
         if video_url:

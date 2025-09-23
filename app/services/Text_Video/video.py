@@ -22,19 +22,27 @@ class VideoService:
                 'Content-Type': 'application/json'
             })
 
-    def generate_video_veo3_gen(self, prompt: str, video_ratio: str, video_quality: str) -> str:
+    def generate_video_veo3_gen(self, prompt: str, video_ratio: str, video_quality: str, video_model: str = None) -> str:
         """Generates a video using Veo3 Gen with proper async handling."""
         
         if not self.veo3_gen_api_key:
             logger.warning("VEO3_GEN_API_KEY not found in environment variables")
             return None
         
-        # Map quality to model type and resolution
+        # Use provided video_model or fallback to quality-based mapping
+        if video_model:
+            model = video_model
+        else:
+            # Fallback: Map quality to model type
+            if video_quality in ["140", "360", "720"]:
+                model = "veo3-fast"
+            else:
+                model = "veo3-quality"
+        
+        # Map quality to resolution
         if video_quality in ["140", "360", "720"]:
-            model = "veo3-fast"
             resolution = "720p"
         else:
-            model = "veo3-quality"
             resolution = "1080p"
         
         # Map video_ratio to proper format if needed
@@ -141,7 +149,7 @@ class VideoService:
         logger.error('VEO3 video generation timed out')
         return None
 
-    def generate_video_google_veo3(self, prompt: str, video_ratio: str, video_quality: str) -> str:
+    def generate_video_google_veo3(self, prompt: str, video_ratio: str, video_quality: str, video_model: str = None) -> str:
         """Generates a video using Google Veo3 via official Google GenAI client."""
         
         if not self.google_veo3_api_key:
@@ -236,19 +244,20 @@ class VideoService:
             logger.error(f"Google Veo3 Error: {e}")
             return None
 
-    def generate_video(self, prompt: str, video_ratio: str, video_quality: str) -> str:
+    def generate_video(self, prompt: str, video_ratio: str, video_quality: str, video_model: str = None) -> str:
         """Attempts to generate a video with Veo3 Gen, falls back to Google Veo3."""
         logger.info(f"Starting video generation for prompt: {prompt[:50]}...")
+        logger.info(f"Using video model: {video_model if video_model else 'auto-detected from quality'}")
         
         # Try Veo3 Gen first
-        video_url = self.generate_video_veo3_gen(prompt, video_ratio, video_quality)
+        video_url = self.generate_video_veo3_gen(prompt, video_ratio, video_quality, video_model)
         if video_url:
             logger.info("Successfully generated video with Veo3 Gen")
             return video_url
         
         # Fall back to Google Veo3
         logger.info("Veo3 Gen failed, trying Google Veo3...")
-        video_url = self.generate_video_google_veo3(prompt, video_ratio, video_quality)
+        video_url = self.generate_video_google_veo3(prompt, video_ratio, video_quality, video_model)
         if video_url:
             logger.info("Successfully generated video with Google Veo3")
             return video_url
