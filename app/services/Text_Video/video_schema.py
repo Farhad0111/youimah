@@ -27,3 +27,7 @@ class VideoRequest(BaseModel):
         if v not in allowed_qualities:
             raise ValueError(f'video_quality must be one of {allowed_qualities}')
         return v
+
+
+#miya bhalo kore code koro
+#r koto
